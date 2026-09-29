@@ -1,0 +1,34 @@
+# STM32CubeIDE / Eclipse workspace and generated build output
+.metadata/
+Debug/
+Release/
+
+# STM32CubeMX generated support and vendor sources.
+# Restore these from WIZ630io-TCP-STM32.ioc with CubeMX 6.12 / CubeH7 1.11.2.
+/Drivers/
+/Core/Inc/
+/Core/Src/stm32h7xx_hal_msp.c
+/Core/Src/stm32h7xx_it.c
+
+# Compiler and linker output
+*.elf
+*.bin
+*.hex
+*.map
+*.o
+*.d
+*.su
+*.list
+*.lss
+*.cyclo
+__pycache__/
+*.py[cod]
+
+# Host/editor temporary files
+*.tmp
+*.lck
+.DS_Store
+Thumbs.db
+
+# CubeMX generated system support
+/Core/Src/system_stm32h7xx.c
