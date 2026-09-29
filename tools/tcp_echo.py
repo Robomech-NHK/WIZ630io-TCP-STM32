@@ -1,14 +1,16 @@
 #!/usr/bin/env python3
-"""Make one simple TCP echo request to the W6300 server."""
+"""Keep a TCP connection open and repeatedly test the W6300 echo server."""
 
 import argparse
 import socket
 import sys
+import time
 
 DEFAULT_HOST = "192.168.0.10"
 DEFAULT_PORT = 5000
 DEFAULT_TIMEOUT = 5.0
 DEFAULT_MESSAGE = "W6300 TCP echo test"
+ECHO_INTERVAL_SECONDS = 1.0
 
 
 def recv_exact(connection: socket.socket, size: int) -> bytes:
@@ -29,7 +31,7 @@ def main() -> int:
     parser.add_argument("--host", default=DEFAULT_HOST, help="server IPv4 address")
     parser.add_argument("--port", type=int, default=DEFAULT_PORT, help="server TCP port")
     parser.add_argument("--timeout", type=float, default=DEFAULT_TIMEOUT, help="timeout in seconds")
-    parser.add_argument("--message", default=DEFAULT_MESSAGE, help="UTF-8 text to send")
+    parser.add_argument("--message", default=DEFAULT_MESSAGE, help="UTF-8 text to send each time")
     args = parser.parse_args()
 
     if not 1 <= args.port <= 65535:
@@ -38,21 +40,33 @@ def main() -> int:
         parser.error("--timeout must be greater than zero")
 
     payload = args.message.encode("utf-8")
+    if not payload:
+        parser.error("--message must not be empty")
+
+    completed = 0
     try:
         with socket.create_connection((args.host, args.port), timeout=args.timeout) as connection:
             connection.settimeout(args.timeout)
-            connection.sendall(payload)
-            echoed = recv_exact(connection, len(payload))
+            print(
+                f"Connected to {args.host}:{args.port}; sending every "
+                f"{ECHO_INTERVAL_SECONDS:g}s. Press Ctrl+C to stop.",
+                flush=True,
+            )
 
-        if echoed != payload:
-            print(f"FAIL: sent {payload!r}, received {echoed!r}", file=sys.stderr)
-            return 1
+            while True:
+                connection.sendall(payload)
+                echoed = recv_exact(connection, len(payload))
+                if echoed != payload:
+                    print(f"FAIL: sent {payload!r}, received {echoed!r}", file=sys.stderr)
+                    return 1
 
-        print(f"PASS: {args.host}:{args.port} echoed {echoed!r}")
-        return 0
+                completed += 1
+                print(f"PASS #{completed}: echoed {len(echoed)} bytes", flush=True)
+                time.sleep(ECHO_INTERVAL_SECONDS)
+
     except KeyboardInterrupt:
-        print("Interrupted", file=sys.stderr)
-        return 130
+        print(f"\nStopped after {completed} successful echo(s).")
+        return 0
     except (OSError, ConnectionError) as error:
         print(f"FAIL: {error}", file=sys.stderr)
         return 1
