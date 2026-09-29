@@ -61,7 +61,7 @@ def main() -> int:
                     return 1
 
                 completed += 1
-                print(f"PASS #{completed}: echoed {len(echoed)} bytes", flush=True)
+                print(f"PASS #{completed}: received {echoed.decode('utf-8')!r}", flush=True)
                 time.sleep(ECHO_INTERVAL_SECONDS)
 
     except KeyboardInterrupt:
